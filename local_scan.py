@@ -1,16 +1,59 @@
-import nmap
+import socket
+import threading
+import queue
+import json
 
-# Find your private IP address by opening Command Prompt and typing 'ipconfig'
-# It will likely start with 192.168.x.x
-your_private_ip = "10.226.14.149" # <-- CHANGE THIS to your actual private IP
+def scan_port(target, port, results):
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(0.4)
+        sock.connect((target, port))
+        results.put(port)
+    except:
+        pass
+    finally:
+        sock.close()
 
-nm = nmap.PortScanner()
-print(f"Scanning {your_private_ip}...")
-nm.scan(your_private_ip, '21,22,80,443')
+def run_fast_scan(target, ports=None):
+    if ports is None:
+        ports = [
+            21, 22, 23, 25, 53, 80, 110, 111, 135, 139,
+            143, 443, 445, 587, 993, 995, 1723, 3306,
+            3389, 5900, 8080, 8443
+        ]
 
-if your_private_ip in nm.all_hosts():
-    for port in nm[your_private_ip]['tcp'].keys():
-        if nm[your_private_ip]['tcp'][port]['state'] == 'open':
-            print(f"Port {port} is open")
-else:
-    print("Host seems down.")
+    results = queue.Queue()
+    threads = []
+
+    for port in ports:
+        t = threading.Thread(target=scan_port, args=(target, port, results))
+        threads.append(t)
+        t.start()
+
+    for t in threads:
+        t.join()
+
+    open_ports = sorted(list(results.queue))
+    return open_ports
+
+
+def run_full_scan(target, start_port=1, end_port=1024):
+    results = queue.Queue()
+    threads = []
+
+    for port in range(start_port, end_port + 1):
+        t = threading.Thread(target=scan_port, args=(target, port, results))
+        threads.append(t)
+        t.start()
+
+        # throttle slightly to avoid overwhelming Render
+        if port % 200 == 0:
+            for x in threads:
+                x.join()
+            threads = []
+
+    for t in threads:
+        t.join()
+
+    open_ports = sorted(list(results.queue))
+    return open_ports
