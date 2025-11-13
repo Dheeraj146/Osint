@@ -14,17 +14,24 @@
 
     {% if results %}
     <div class="results-wrapper">
+
         <div class="button-container">
             <button class="copy-btn" data-target="results-container">Copy Results</button>
             <a href="{{ url_for('download_report', type='ip', query=ip_address) }}" class="button">Download Report</a>
         </div>
+
         <div id="results-container">
+
             {% if 'Error' in results %}
-                <h3 style="color: #ff4d4d;">Error</h3><p>{{ results['Error'] }}</p>
+                <h3 style="color: #ff4d4d;">Error</h3>
+                <p>{{ results['Error'] }}</p>
+
             {% elif results.ipinfo.get('bogon') %}
                 <h3 style="color: #f39c12;">Private or Reserved IP</h3>
-                <p>The IP address {{ results.ipinfo.ip }} is a private, reserved, or invalid address and cannot be scanned from the public internet.</p>
+                <p>The IP address {{ results.ipinfo.ip }} is a private, reserved, or invalid address and cannot be scanned.</p>
+
             {% else %}
+
                 <h3>Results for {{ results.ipinfo.ip }}:</h3>
 
                 <!-- IPinfo -->
@@ -37,23 +44,16 @@
                     </ul>
                 </div>
 
-                <!-- Nmap Scan -->
+                <!-- PORT SCAN (Pure Python) -->
                 <div class="results-card">
-                    <h4>Nmap Scan Results</h4>
+                    <h4>Open Ports (Fast Scan)</h4>
                     <ul>
-                        {% if results.nmap and not results.nmap.error %}
-                            <li><strong>OS Guess:</strong> {{ results.nmap.osmatch[0].name if results.nmap.osmatch else 'Could not determine' }}</li>
-                            <li><strong>Open Ports & Services:</strong>
-                                <ul>
-                                {% for port, info in results.nmap.get('tcp', {}).items() %}
-                                    <li>Port {{ port }}: {{ info.name }} ({{ info.product }} {{ info.version }})</li>
-                                {% else %}
-                                    <li style="opacity:0.6;">No open TCP ports found in scan.</li>
-                                {% endfor %}
-                                </ul>
-                            </li>
+                        {% if results.open_ports and results.open_ports|length > 0 %}
+                            {% for port in results.open_ports %}
+                                <li>Port {{ port }}: Open</li>
+                            {% endfor %}
                         {% else %}
-                            <li style="color: #f39c12;">{{ results.nmap.error | default('Nmap scan failed to run.') }}</li>
+                            <li style="opacity: 0.6;">No open ports detected.</li>
                         {% endif %}
                     </ul>
                 </div>
@@ -63,7 +63,7 @@
                     <h4>AbuseIPDB Reputation</h4>
                     {% if results.abuseipdb and not results.abuseipdb.error %}
                     <ul>
-                        <li><strong>Confidence Score of Abuse:</strong> {{ results.abuseipdb.abuseConfidenceScore }}%</li>
+                        <li><strong>Confidence Score:</strong> {{ results.abuseipdb.abuseConfidenceScore }}%</li>
                         <li><strong>Total Reports:</strong> {{ results.abuseipdb.totalReports }}</li>
                         <li><strong>Usage Type:</strong> {{ results.abuseipdb.usageType }}</li>
                     </ul>
@@ -77,9 +77,9 @@
                     <h4>VirusTotal Analysis</h4>
                     {% if results.virustotal and results.virustotal.last_analysis_stats %}
                     <ul>
-                        <li><strong>Malicious Detections:</strong> {{ results.virustotal.last_analysis_stats.malicious }}</li>
-                        <li><strong>Suspicious Detections:</strong> {{ results.virustotal.last_analysis_stats.suspicious }}</li>
-                        <li><strong>Reputation Score:</strong> {{ results.virustotal.reputation }}</li>
+                        <li><strong>Malicious:</strong> {{ results.virustotal.last_analysis_stats.malicious }}</li>
+                        <li><strong>Suspicious:</strong> {{ results.virustotal.last_analysis_stats.suspicious }}</li>
+                        <li><strong>Reputation:</strong> {{ results.virustotal.reputation }}</li>
                     </ul>
                     {% else %}
                     <p style="opacity: 0.6;">No data found.</p>
@@ -88,26 +88,32 @@
 
                 <!-- Shodan -->
                 <div class="results-card">
-                    <h4>Shodan Device Information</h4>
+                    <h4>Shodan Device Intelligence</h4>
                     {% if results.shodan and not results.shodan.error %}
                     <ul>
                         <li><strong>ISP:</strong> {{ results.shodan.isp }}</li>
                         <li><strong>Open Ports:</strong> {{ results.shodan.ports | join(', ') }}</li>
-                        <li><strong>Known Vulnerabilities (CVEs):</strong> {{ results.shodan.vulns | join(', ') if results.shodan.vulns else 'None' }}</li>
+                        <li><strong>Known CVEs:</strong>
+                            {% if results.shodan.vulns %}
+                                {{ results.shodan.vulns | join(', ') }}
+                            {% else %}
+                                None
+                            {% endif %}
+                        </li>
                     </ul>
                     {% else %}
                     <p style="opacity: 0.6;">No data found.</p>
                     {% endif %}
                 </div>
 
-                 <!-- OTX -->
+                <!-- OTX -->
                 <div class="results-card">
                     <h4>OTX Threat Intelligence</h4>
                     <ul>
                         {% if results.otx.pulse_info %}
-                            <li><strong>Related Threat Reports (Pulses):</strong> {{ results.otx.pulse_info.count }}</li>
+                            <li><strong>Threat Reports (Pulses):</strong> {{ results.otx.pulse_info.count }}</li>
                         {% else %}
-                            <li><strong>Related Threat Reports (Pulses):</strong> 0</li>
+                            <li><strong>Threat Reports (Pulses):</strong> 0</li>
                         {% endif %}
                     </ul>
                 </div>
@@ -117,4 +123,5 @@
     </div>
     {% endif %}
 </div>
+{% endblock %}
 {% endblock %}
