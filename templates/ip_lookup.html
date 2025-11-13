@@ -22,13 +22,13 @@
 
         <div id="results-container">
 
-            {% if 'Error' in results %}
+            {% if results.Error %}
                 <h3 style="color: #ff4d4d;">Error</h3>
-                <p>{{ results['Error'] }}</p>
+                <p>{{ results.Error }}</p>
 
-            {% elif results.ipinfo.get('bogon') %}
+            {% elif results.ipinfo.bogon %}
                 <h3 style="color: #f39c12;">Private or Reserved IP</h3>
-                <p>The IP address {{ results.ipinfo.ip }} is a private, reserved, or invalid address and cannot be scanned.</p>
+                <p>The IP address {{ results.ipinfo.ip }} is private/reserved and cannot be scanned.</p>
 
             {% else %}
 
@@ -44,7 +44,7 @@
                     </ul>
                 </div>
 
-                <!-- PORT SCAN (Pure Python) -->
+                <!-- PYTHON PORT SCANNER -->
                 <div class="results-card">
                     <h4>Open Ports (Fast Scan)</h4>
                     <ul>
@@ -61,7 +61,7 @@
                 <!-- AbuseIPDB -->
                 <div class="results-card">
                     <h4>AbuseIPDB Reputation</h4>
-                    {% if results.abuseipdb and not results.abuseipdb.error %}
+                    {% if results.abuseipdb and (not results.abuseipdb.error) %}
                     <ul>
                         <li><strong>Confidence Score:</strong> {{ results.abuseipdb.abuseConfidenceScore }}%</li>
                         <li><strong>Total Reports:</strong> {{ results.abuseipdb.totalReports }}</li>
@@ -89,7 +89,7 @@
                 <!-- Shodan -->
                 <div class="results-card">
                     <h4>Shodan Device Intelligence</h4>
-                    {% if results.shodan and not results.shodan.error %}
+                    {% if results.shodan and (not results.shodan.error) %}
                     <ul>
                         <li><strong>ISP:</strong> {{ results.shodan.isp }}</li>
                         <li><strong>Open Ports:</strong> {{ results.shodan.ports | join(', ') }}</li>
@@ -120,8 +120,8 @@
 
             {% endif %}
         </div>
+
     </div>
     {% endif %}
 </div>
-{% endblock %}
 {% endblock %}
