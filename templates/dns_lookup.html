@@ -1,0 +1,122 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h2>🌐 DNS & Domain Enumeration</h2>
+    <p>Get DNS records and automatically pivot to a full threat intelligence scan on the primary IP.</p>
+</div>
+
+<div class="content-container">
+    <form method="post">
+        <input type="text" name="domain" placeholder="Enter domain (e.g., google.com)" size="30" required>
+        <button type="submit">Lookup</button>
+    </form>
+
+    {% if results %}
+    <div class="results-wrapper">
+        <div class="button-container">
+            <button class="copy-btn" data-target="results-container">Copy Results</button>
+            <a href="{{ url_for('download_report', type='dns', query=domain) }}" class="button">Download Report</a>
+        </div>
+        <div id="results-container">
+            {% if 'Error' in results %}
+                <h3 style="color: #ff4d4d;">Error</h3>
+                <p>{{ results['Error'] }}</p>
+            {% else %}
+                <h3>Results for {{ domain }}:</h3>
+
+                <!-- IP Intelligence Section -->
+                {% if results.ip_intelligence %}
+                <div class="results-card">
+                    <h4>Primary IP Intelligence (for {{ results.ip_intelligence.ipinfo.ip }})</h4>
+
+                    <p><strong>Location:</strong> {{ results.ip_intelligence.ipinfo.city }}, {{ results.ip_intelligence.ipinfo.country }}</p>
+                    <p><strong>Organization:</strong> {{ results.ip_intelligence.ipinfo.org }}</p>
+
+                    <p><strong>AbuseIPDB Score:</strong> {{ results.ip_intelligence.abuseipdb.abuseConfidenceScore }}%</p>
+                    <p><strong>VirusTotal Malicious Detections:</strong> {{ results.ip_intelligence.virustotal.last_analysis_stats.malicious }}</p>
+                    <p><strong>Shodan - Open Ports:</strong> {{ results.ip_intelligence.shodan.ports | join(', ') }}</p>
+                </div>
+                {% endif %}
+
+                <!-- DNS Records -->
+                <div class="results-card">
+                    <h4>DNS Records</h4>
+                    {% for record_type, records in results.dns_records.items() %}
+                        <h5>{{ record_type }} Records</h5>
+                        <ul>
+                            {% for record in records %}
+                                <li>{{ record }}</li>
+                            {% else %}
+                                <li style="opacity: 0.6;">No {{ record_type }} records found.</li>
+                            {% endfor %}
+                        </ul>
+                    {% endfor %}
+                </div>
+
+                <!-- Web Application Firewall (WAF) -->
+                <div class="results-card">
+                    <h4>Web Application Firewall (WAF)</h4>
+                    <ul>
+                        {% for waf_info in results.waf %}
+                            <li>{{ waf_info }}</li>
+                        {% else %}
+                            <li style="opacity: 0.6;">No WAF detected.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- Domain Threat Intel -->
+                <div class="results-card">
+                    <h4>Domain Threat Intelligence</h4>
+                    <h5>VirusTotal Analysis</h5>
+                    <ul>
+                        <li><strong>Malicious Detections:</strong> {{ results.domain_virustotal.last_analysis_stats.malicious }}</li>
+                        <li><strong>Suspicious Detections:</strong> {{ results.domain_virustotal.last_analysis_stats.suspicious }}</li>
+                        <li><strong>Reputation Score:</strong> {{ results.domain_virustotal.reputation }}</li>
+                    </ul>
+                    <h5>OTX Threat Intelligence</h5>
+                    <ul>
+                        {% if results.domain_otx.pulse_info %}
+                            <li><strong>Related Threat Reports (Pulses):</strong> {{ results.domain_otx.pulse_info.count }}</li>
+                        {% else %}
+                            <li><strong>Related Threat Reports (Pulses):</strong> 0</li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <!-- Other Enumeration -->
+                <div class="results-card">
+                     <h4>Other Enumeration</h4>
+                     <h5>Public Emails Found on Homepage</h5>
+                     <ul>
+                        {% for email in results.emails %}
+                            <li>{{ email }}</li>
+                        {% else %}
+                            <li style="opacity: 0.6;">No public emails found.</li>
+                        {% endfor %}
+                    </ul>
+                     <h5>Common Subdomains Found</h5>
+                     <ul>
+                        {% for sub in results.subdomains %}
+                            <li>{{ sub }}</li>
+                        {% else %}
+                            <li style="opacity: 0.6;">No common subdomains found.</li>
+                        {% endfor %}
+                    </ul>
+                     <h5>Common Web Directories Found</h5>
+                     <ul>
+                        {% for directory in results.directories %}
+                            <li>{{ directory }}</li>
+                        {% else %}
+                            <li style="opacity: 0.6;">No common directories found.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

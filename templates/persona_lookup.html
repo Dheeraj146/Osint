@@ -1,0 +1,55 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <div class="page-header">
+        <h2>👤 Persona Lookup</h2>
+        <p>Investigate an email's public exposure, from data breaches to generated investigation links.</p>
+    </div>
+
+    <div class="content-container">
+        <form method="post">
+            <input type="email" name="email" placeholder="Enter an email address" size="30" required>
+            <button type="submit">Lookup</button>
+        </form>
+
+        {% if results %}
+            <div class="results-wrapper">
+                <div class="button-container">
+                    <button class="copy-btn" data-target="results-container">Copy Results</button>
+                    <a href="{{ url_for('download_report', type='persona', query=email) }}" class="button">Download Report</a>
+                </div>
+                <div id="results-container">
+                    {% if 'Error' in results %}
+                        <h3 style="color: #ff4d4d;">Error</h3>
+                        <p>{{ results['Error'] }}</p>
+                    {% else %}
+                        <h3>Results for {{ email }}:</h3>
+
+                        <h4>Data Breach Exposure (Have I Been Pwned)</h4>
+                        {% if results.breaches_error %}
+                            <p style="color: #f39c12;">{{ results.breaches_error }}</p>
+                        {% elif results.breaches %}
+                            <p style="color: #ff4d4d;">This email was found in the following data breaches:</p>
+                            <ul>
+                                {% for breach in results.breaches %}
+                                    <li><strong>{{ breach.Name }}</strong> ({{ breach.BreachDate }})</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p style="color: #28a745;">Good news! This email was not found in any known public data breaches.</p>
+                        {% endif %}
+
+                        <hr>
+                        <h4>Manual Investigation Links</h4>
+                        <p>Use these links to search for public profiles associated with the email. These searches run in your browser to avoid being blocked.</p>
+                        <ul>
+                            {% for site, link in results.accounts.items() %}
+                                <li><a href="{{ link }}" target="_blank">Search for "{{ email }}" on {{ site }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

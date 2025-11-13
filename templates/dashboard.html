@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <div class="hero">
+        <h1>OSINT-Nexus</h1>
+        <p>Your Centralized Open-Source Intelligence Hub</p>
+    </div>
+
+    <div class="card-container">
+        <!-- DNS Lookup Card -->
+        <div class="card">
+            <h3>🌐 DNS & Domain Enumeration</h3>
+            <p>Map a domain's infrastructure. Discover DNS records, check for web application firewalls, find public emails, and enumerate common subdomains and directories.</p>
+            <a href="{{ url_for('dns_lookup') }}">Launch DNS Tool</a>
+        </div>
+
+        <!-- IP Lookup Card -->
+        <div class="card">
+            <h3>📍 IP Intelligence</h3>
+            <p>Analyze a public IP address. Gather geolocation data, find the hostname, perform OS detection, and scan for open ports and running services.</p>
+            <a href="{{ url_for('ip_lookup') }}">Launch IP Tool</a>
+        </div>
+    </div>
+
+    <div class="info-section">
+        <h2>Ethical Use Guidelines</h2>
+        <p>This tool is designed for educational purposes, professional security assessments, and personal security audits. All tools query publicly available information. Users are responsible for complying with all applicable laws. Unauthorized scanning or testing of systems you do not own is strictly prohibited.</p>
+    </div>
+{% endblock %}

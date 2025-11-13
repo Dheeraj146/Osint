@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OSINT-Nexus</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <nav>
+        <a href="/">Dashboard</a>
+        <a href="/dns">DNS Lookup</a>
+        <a href="/ip">IP Lookup</a>
+    </nav>
+
+    {% block content %}{% endblock %}
+
+    <!-- Loading Spinner Element -->
+    <div id="loading-spinner" class="spinner"></div>
+
+    <!-- JavaScript to control the spinner and copy button -->
+    <script>
+        // --- Spinner Logic ---
+        const forms = document.querySelectorAll('form');
+        const spinner = document.getElementById('loading-spinner');
+
+        forms.forEach(form => {
+            form.addEventListener('submit', function() {
+                spinner.style.display = 'block';
+            });
+        });
+
+        // --- Copy Button Logic ---
+        const copyButtons = document.querySelectorAll('.copy-btn');
+
+        copyButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const targetId = this.dataset.target;
+                const resultsContainer = document.getElementById(targetId);
+
+                if (resultsContainer) {
+                    const textToCopy = resultsContainer.innerText;
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                        this.innerText = 'Copied!';
+                        setTimeout(() => {
+                            this.innerText = 'Copy Results';
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
